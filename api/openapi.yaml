@@ -1,0 +1,117 @@
+openapi: 3.0.3
+info:
+  title: Diting-ICS API
+  version: 1.0.0
+  description: 工业安全事件接入、告警研判与事件处置 API
+servers:
+  - url: http://localhost:8080
+paths:
+  /healthz:
+    get:
+      summary: 服务健康检查
+      responses:
+        "200": { description: healthy }
+  /api/v1/auth/login:
+    post:
+      summary: 分析员登录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string, example: analyst }
+                password: { type: string, format: password }
+      responses:
+        "200": { description: 登录成功 }
+        "401": { description: 凭据错误 }
+  /api/v1/events:
+    post:
+      summary: 接入归一化工业安全事件
+      security: [{ IngestKey: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Event" }
+      responses:
+        "202": { description: 已进入检测链路 }
+        "400": { description: 事件字段不完整 }
+  /api/v1/overview:
+    get:
+      summary: 查询态势统计
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200": { description: 统计结果 }
+  /api/v1/assets:
+    get:
+      summary: 查询工业资产
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200": { description: 资产列表 }
+  /api/v1/alerts:
+    get:
+      summary: 查询告警
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [all, open, acknowledged, investigating, resolved] } }
+        - { name: limit, in: query, schema: { type: integer, maximum: 500, default: 100 } }
+      responses:
+        "200": { description: 告警列表 }
+  /api/v1/alerts/{id}:
+    patch:
+      summary: 更新告警状态或负责人
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string, enum: [open, acknowledged, investigating, resolved] }
+                assignee: { type: string }
+      responses:
+        "200": { description: 更新成功 }
+  /api/v1/incidents:
+    get:
+      summary: 查询安全事件单
+      security: [{ BearerAuth: [] }]
+      responses:
+        "200": { description: 事件单列表 }
+    post:
+      summary: 从告警创建事件单
+      security: [{ BearerAuth: [] }]
+      responses:
+        "201": { description: 创建成功 }
+components:
+  securitySchemes:
+    BearerAuth: { type: http, scheme: bearer }
+    IngestKey: { type: apiKey, in: header, name: X-Ingest-Key }
+  schemas:
+    Event:
+      type: object
+      required: [asset_ip, source_ip, protocol, event_type]
+      properties:
+        id: { type: string }
+        asset_ip: { type: string, example: 10.20.1.11 }
+        asset_name: { type: string, example: PLC-1 灌装控制器 }
+        asset_type: { type: string, example: PLC }
+        zone: { type: string, example: 生产一区 }
+        source_ip: { type: string, example: 172.16.8.66 }
+        protocol: { type: string, example: modbus }
+        event_type: { type: string, example: control }
+        action: { type: string, example: write_register }
+        function_code: { type: integer, example: 16 }
+        register_address: { type: integer, example: 40001 }
+        destination_port: { type: integer }
+        value: { type: number }
+        expected_min: { type: number }
+        expected_max: { type: number }
+        authorized: { type: boolean }
+        success: { type: boolean }
+        occurred_at: { type: string, format: date-time }
+

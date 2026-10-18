@@ -1,13 +1,26 @@
-TOOLS_SHELL="./hack/tools.sh"
+.PHONY: run test cover vet fmt docker-up docker-down demo
 
-.PHONY: test
+run:
+	go run ./cmd/api
+
 test:
-	@${TOOLS_SHELL} test
-	@echo "go test finished"
+	go test ./...
 
+cover:
+	go test -race -coverprofile=coverage.out ./...
 
-
-.PHONY: vet
 vet:
-	@${TOOLS_SHELL} vet
-	@echo "vet check finished"
+	go vet ./...
+
+fmt:
+	gofmt -w ./cmd ./internal
+
+docker-up:
+	docker compose up --build -d
+
+docker-down:
+	docker compose down
+
+demo:
+	curl -X POST http://localhost:8080/api/v1/demo/generate -H "Authorization: Bearer $$TOKEN"
+

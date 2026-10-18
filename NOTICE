@@ -1,0 +1,8 @@
+Go-Ditecting / Diting-ICS
+Copyright 2026 Northeastern University Diting Network Security Laboratory contributors
+
+This project was inspired by and restructured from CloudWeGo biz-demo/gomall,
+which is distributed under the Apache License 2.0. The current codebase implements
+an independent industrial cybersecurity monitoring domain and retains the Apache
+License 2.0 for attribution and reuse.
+

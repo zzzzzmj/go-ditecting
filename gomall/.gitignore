@@ -1,9 +1,0 @@
-.DS_Store
-app/cart/.env
-app/**/nohup.out
-.idea/
-app/**/log/
-app/**/tmp/
-app/**/kitex_gen/
-
-go.work.sum

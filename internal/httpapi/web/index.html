@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="谛听 Diting-ICS：面向工业控制网络的安全监测与告警处置平台">
+  <title>谛听 Diting-ICS · 工业安全态势感知</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="noise"></div>
+  <div id="login" class="login-shell">
+    <section class="login-card">
+      <div class="brand brand-large"><span class="brand-mark">谛</span><div><strong>谛听 Diting-ICS</strong><small>工业网络安全监测平台</small></div></div>
+      <div class="login-copy"><span class="eyebrow">NORTHEASTERN UNIVERSITY · CYBER SECURITY</span><h1>让每一次异常<br>都有迹可循。</h1><p>事件驱动的工业资产监测、检测分析与告警处置闭环。</p></div>
+      <form id="login-form">
+        <label>分析员账号<input id="username" value="analyst" autocomplete="username" required></label>
+        <label>访问密码<input id="password" type="password" value="diting2026" autocomplete="current-password" required></label>
+        <p id="login-error" class="form-error"></p>
+        <button class="button button-primary button-full" type="submit">进入态势中心 <span>→</span></button>
+      </form>
+      <p class="demo-tip">演示账号已预填 · 数据仅用于隔离环境</p>
+    </section>
+  </div>
+
+  <div id="app" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">谛</span><div><strong>谛听</strong><small>DITING · ICS</small></div></div>
+      <nav>
+        <button class="nav-item active" data-view="dashboard"><span>◫</span>态势总览</button>
+        <button class="nav-item" data-view="alerts"><span>△</span>告警中心 <b id="nav-alert-count">0</b></button>
+        <button class="nav-item" data-view="assets"><span>◇</span>资产视图</button>
+        <button class="nav-item" data-view="events"><span>⌁</span>事件流</button>
+        <button class="nav-item" data-view="rules"><span>⌘</span>检测规则</button>
+      </nav>
+      <div class="lab-card"><span class="pulse-dot"></span><small>LAB SENSOR</small><strong>采集链路正常</strong><p>NATS · 12 ms</p></div>
+      <button id="logout" class="logout">退出系统</button>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div><p class="breadcrumb">态势中心 / <span id="page-name">实时总览</span></p><h2 id="page-title">工业网络安全态势</h2></div>
+        <div class="top-actions"><div class="clock"><span id="date"></span><strong id="time"></strong></div><button id="generate" class="button button-primary">▶ 模拟攻击流量</button></div>
+      </header>
+
+      <section id="dashboard-view" class="view active-view">
+        <div class="hero-strip"><div><span class="eyebrow">REAL-TIME DEFENSE</span><h3>生产网络整体运行稳定</h3><p>谛听正在持续分析工业协议与资产行为，优先呈现影响工艺安全的异常。</p></div><div class="defense-score"><span>防护指数</span><strong id="score">--</strong><small>/ 100</small></div></div>
+        <div class="stat-grid">
+          <article class="stat-card"><span class="stat-icon cyan">◇</span><div><small>纳管资产</small><strong id="asset-count">0</strong><p><em id="online-count">0</em> 台在线</p></div></article>
+          <article class="stat-card"><span class="stat-icon orange">△</span><div><small>未处置告警</small><strong id="alert-count">0</strong><p>需立即研判</p></div></article>
+          <article class="stat-card"><span class="stat-icon red">!</span><div><small>严重告警</small><strong id="critical-count">0</strong><p>影响关键设备</p></div></article>
+          <article class="stat-card"><span class="stat-icon violet">⌁</span><div><small>24h 事件</small><strong id="event-count">0</strong><p>实时持续接入</p></div></article>
+        </div>
+        <div class="dashboard-grid">
+          <article class="panel wide"><div class="panel-head"><div><small>ALERT TIMELINE</small><h3>最新安全告警</h3></div><button class="link-button" data-goto="alerts">查看全部 →</button></div><div id="recent-alerts" class="alert-list empty-state">等待告警数据</div></article>
+          <article class="panel"><div class="panel-head"><div><small>RISK LEVEL</small><h3>风险等级分布</h3></div></div><div class="donut-wrap"><div id="donut" class="donut"><div><strong id="donut-total">0</strong><span>活跃告警</span></div></div><div id="severity-legend" class="legend"></div></div></article>
+          <article class="panel"><div class="panel-head"><div><small>PROTOCOL INSIGHT</small><h3>协议事件占比</h3></div></div><div id="protocol-bars" class="protocol-bars empty-state">暂无协议事件</div></article>
+          <article class="panel wide"><div class="panel-head"><div><small>OT ASSETS</small><h3>关键资产状态</h3></div><button class="link-button" data-goto="assets">资产视图 →</button></div><div id="asset-preview" class="asset-preview"></div></article>
+        </div>
+      </section>
+
+      <section id="alerts-view" class="view">
+        <div class="section-toolbar"><div class="filter-tabs"><button class="active" data-status="all">全部</button><button data-status="open">待处置</button><button data-status="investigating">调查中</button><button data-status="resolved">已解决</button></div><button id="refresh-alerts" class="button button-secondary">刷新数据</button></div>
+        <div class="table-panel"><table><thead><tr><th>等级</th><th>告警 / ATT&CK</th><th>目标资产</th><th>攻击源</th><th>次数</th><th>最近发生</th><th>状态</th><th>操作</th></tr></thead><tbody id="alert-table"></tbody></table></div>
+      </section>
+
+      <section id="assets-view" class="view"><div class="card-grid" id="asset-grid"></div></section>
+      <section id="events-view" class="view"><div class="terminal-panel"><div class="terminal-head"><span></span><span></span><span></span><p>diting-live-event-stream</p></div><div id="event-stream" class="event-stream"></div></div></section>
+      <section id="rules-view" class="view"><div class="rule-grid" id="rule-grid"></div></section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <script src="/app.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,129 @@
+name: go-ditecting
+
+x-app-env: &app-env
+  APP_ENV: production
+  DATABASE_DSN: diting:diting_password@tcp(mysql:3306)/diting?charset=utf8mb4&parseTime=true&loc=Local
+  NATS_URL: nats://nats:4222
+  NATS_SUBJECT: ics.events
+  JWT_SECRET: ${JWT_SECRET:-please-change-this-demo-secret-32bytes}
+  DEMO_USERNAME: ${DEMO_USERNAME:-analyst}
+  DEMO_PASSWORD: ${DEMO_PASSWORD:-diting2026}
+  INGEST_API_KEY: ${INGEST_API_KEY:-diting-ingest-key}
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: diting
+      MYSQL_USER: diting
+      MYSQL_PASSWORD: diting_password
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot_password --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [diting]
+
+  nats:
+    image: nats:2.10-alpine
+    command: ["-js", "-m", "8222"]
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8222/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [diting]
+
+  api:
+    build:
+      context: .
+      args: { SERVICE: api }
+    environment:
+      <<: *app-env
+      APP_MODE: distributed
+      HTTP_ADDR: :8080
+      ALLOWED_ORIGINS: http://localhost:8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql: { condition: service_healthy }
+      nats: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [diting]
+
+  detector:
+    build:
+      context: .
+      args: { SERVICE: detector }
+    environment:
+      <<: *app-env
+      APP_MODE: detector
+      METRICS_ADDR: :9091
+    depends_on:
+      mysql: { condition: service_healthy }
+      nats: { condition: service_healthy }
+    deploy:
+      replicas: 1
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9091/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    networks: [diting]
+
+  simulator:
+    build:
+      context: .
+      args: { SERVICE: simulator }
+    environment:
+      <<: *app-env
+    depends_on:
+      nats: { condition: service_healthy }
+    restart: unless-stopped
+    networks: [diting]
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    volumes:
+      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      api: { condition: service_healthy }
+    networks: [diting]
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: diting-grafana
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    depends_on: [prometheus]
+    networks: [diting]
+
+volumes:
+  mysql-data:
+
+networks:
+  diting:
+    driver: bridge
+

@@ -1,0 +1,18 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "panels": [
+    {"type":"stat","title":"接入事件","gridPos":{"h":8,"w":6,"x":0,"y":0},"targets":[{"expr":"sum(ditecting_events_received_total)","refId":"A"}]},
+    {"type":"stat","title":"处理事件","gridPos":{"h":8,"w":6,"x":6,"y":0},"targets":[{"expr":"sum(ditecting_events_processed_total)","refId":"A"}]},
+    {"type":"stat","title":"新建告警","gridPos":{"h":8,"w":6,"x":12,"y":0},"targets":[{"expr":"sum(ditecting_alerts_created_total)","refId":"A"}]},
+    {"type":"stat","title":"聚合告警","gridPos":{"h":8,"w":6,"x":18,"y":0},"targets":[{"expr":"sum(ditecting_alerts_aggregated_total)","refId":"A"}]}
+  ],
+  "schemaVersion": 39,
+  "tags": ["ics", "security", "go"],
+  "templating": {"list": []},
+  "time": {"from":"now-1h","to":"now"},
+  "title": "Diting-ICS 服务可观测性",
+  "uid": "diting-ics-overview",
+  "version": 1
+}
+
