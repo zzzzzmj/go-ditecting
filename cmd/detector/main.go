@@ -35,10 +35,6 @@ func main() {
 		os.Exit(1)
 	}
 	defer storage.Close()
-	if err = storage.Migrate(ctx); err != nil {
-		logger.Error("migrate failed", "error", err)
-		os.Exit(1)
-	}
 	eventBus, err := bus.NewNATS(cfg.NATSURL, cfg.NATSSubject, "diting-detectors")
 	if err != nil {
 		logger.Error("connect nats failed", "error", err)

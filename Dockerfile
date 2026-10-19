@@ -10,6 +10,7 @@ FROM alpine:3.20
 RUN addgroup -S diting && adduser -S -G diting diting
 WORKDIR /app
 COPY --from=builder /out/app /app/app
+COPY --from=builder /src/db/migrations /app/db/migrations
 USER diting
 EXPOSE 8080
 ENTRYPOINT ["/app/app"]

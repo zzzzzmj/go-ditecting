@@ -23,14 +23,6 @@ func main() {
 
 	storage := mustStore(ctx, cfg, logger)
 	defer storage.Close()
-	if err := storage.Migrate(ctx); err != nil {
-		logger.Error("database migration failed", "error", err)
-		os.Exit(1)
-	}
-	if err := storage.Seed(ctx); err != nil {
-		logger.Error("seed assets failed", "error", err)
-		os.Exit(1)
-	}
 
 	eventBus := mustBus(cfg, cfg.Mode == "standalone", logger)
 	defer eventBus.Close()

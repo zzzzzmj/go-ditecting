@@ -8,8 +8,6 @@ import (
 )
 
 type Store interface {
-	Migrate(context.Context) error
-	Seed(context.Context) error
 	SaveEvent(context.Context, domain.Event) error
 	UpsertAsset(context.Context, domain.Event) error
 	UpsertAlert(context.Context, domain.Event, domain.Finding, time.Duration) (domain.Alert, bool, error)

@@ -15,7 +15,7 @@ Go-Ditecting 为东北大学谛听网络安全实验室的成员赵明杰的个�
 - **事件驱动架构**：API 与检测器通过 NATS 解耦，Detector 使用队列组支持水平扩展；
 - **工业安全语义**：内置 Modbus 非法写入、异常时段控制、认证爆破、OT 端口扫描和工艺参数越界规则；
 - **双运行模式**：本地单进程零依赖演示，Docker Compose 分布式部署；
-- **工程化**：结构化日志、Prometheus 指标、Grafana 面板、健康检查、CI、单元测试和 OpenAPI 文档；
+- **工程化**：结构化日志、Prometheus 指标、Grafana 面板、健康检查、版本化数据库迁移、CI、单元测试和 OpenAPI 文档；
 - **安全基线**：签名令牌、独立采集密钥、输入校验、CORS 白名单和安全响应头。
 
 ## 架构
@@ -58,6 +58,9 @@ go run ./cmd/api
 ```bash
 docker compose up --build -d
 ```
+
+Compose 会先以独立 DDL 账号运行一次性 `migration` Job。只有迁移成功且 Schema
+版本有效，API 与 Detector 才会启动；两个业务服务只使用 DML 账号，不在启动时建表或写入演示数据。
 
 | 服务 | 地址 | 说明 |
 |---|---|---|
@@ -111,7 +114,11 @@ curl -X POST http://localhost:8080/api/v1/events \
 cmd/
 ├── api/          HTTP 接入、查询与 Web 大屏
 ├── detector/     NATS 消费与规则检测
+├── migrate/      独立 golang-migrate Migration Job
 └── simulator/    工业遥测与攻击事件模拟器
+db/
+├── migrations/   不可变的版本化 SQL
+└── testdata/      CI 使用的上一生产版本 Schema
 internal/
 ├── auth/         HMAC 签名令牌
 ├── bus/          内存 / NATS 消息总线
@@ -123,6 +130,9 @@ internal/
 deploy/           Prometheus 与 Grafana 配置
 ```
 
+数据库迁移的权限拆分、发布门禁、备份恢复验证、expand-contract、Online DDL 和回滚策略见
+[`db/README.md`](db/README.md)。已经在共享环境执行的 migration 禁止修改，后续变更必须新增版本。
+
 ## 测试与质量检查
 
 ```bash
@@ -131,7 +141,7 @@ go test -race -coverprofile=coverage.out ./...
 go vet ./...
 ```
 
-测试重点覆盖规则命中/放行、滑动窗口阈值、令牌签发校验和告警聚合。GitHub Actions 会执行格式检查、静态检查、竞态检测、覆盖率采集和三入口构建。
+测试重点覆盖规则命中/放行、滑动窗口阈值、令牌签发校验和告警聚合。GitHub Actions 会执行格式检查、静态检查、竞态检测、覆盖率采集、四入口构建，并分别验证空库迁移和上一生产 Schema 的真实升级路径。
 
 ## 安全说明
 

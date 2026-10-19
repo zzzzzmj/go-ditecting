@@ -26,24 +26,7 @@ func NewMemory() *Memory {
 	return &Memory{assets: make(map[string]domain.Asset), alerts: make(map[int64]domain.Alert), incidents: make(map[int64]domain.Incident), nextAssetID: 1, nextAlertID: 1, nextIncidentID: 1}
 }
 
-func (*Memory) Migrate(context.Context) error { return nil }
-func (*Memory) Close() error                  { return nil }
-
-func (m *Memory) Seed(ctx context.Context) error {
-	now := time.Now().Add(-2 * time.Minute)
-	items := []domain.Event{
-		{AssetIP: "10.20.1.11", AssetName: "PLC-1 灌装控制器", AssetType: "PLC", Zone: "生产一区", OccurredAt: now},
-		{AssetIP: "10.20.1.21", AssetName: "HMI-1 操作员站", AssetType: "HMI", Zone: "生产一区", OccurredAt: now},
-		{AssetIP: "10.20.2.15", AssetName: "ENG-WS 工程师站", AssetType: "Workstation", Zone: "工程管理区", OccurredAt: now},
-		{AssetIP: "10.20.3.10", AssetName: "SCADA-SRV 监控服务器", AssetType: "SCADA", Zone: "控制中心", OccurredAt: now},
-	}
-	for _, item := range items {
-		if err := m.UpsertAsset(ctx, item); err != nil {
-			return err
-		}
-	}
-	return nil
-}
+func (*Memory) Close() error { return nil }
 
 func (m *Memory) SaveEvent(_ context.Context, e domain.Event) error {
 	m.mu.Lock()

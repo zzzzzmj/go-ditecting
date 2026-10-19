@@ -1,4 +1,4 @@
-.PHONY: run test cover vet fmt docker-up docker-down demo
+.PHONY: run test cover vet fmt migrate-up migrate-version docker-up docker-down demo
 
 run:
 	go run ./cmd/api
@@ -14,6 +14,12 @@ vet:
 
 fmt:
 	gofmt -w ./cmd ./internal
+
+migrate-up:
+	go run ./cmd/migrate up
+
+migrate-version:
+	go run ./cmd/migrate version
 
 docker-up:
 	docker compose up --build -d
